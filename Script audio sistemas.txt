@@ -1,0 +1,18 @@
+#!/bin/bash
+
+if [[ $EUID -ne 0 ]]; then
+   echo "Debes ser root para ejecutarlo y que salga bien" 
+   exit 1
+fi
+
+#Se debe poner la IP de las maquinas antes de ejecutar el Script
+server_ip="XXX.XXX.X.XXX"  
+cliente_ip="XXX.XXX.X.XXX" 
+
+apt update && apt upgrade -y
+apt install -y pulseaudio pavucontrol paprefs pulseaudio-utils telnet mpv ufw
+
+#Esto sirve para saber la IP de la maquina
+MY_IP=$(hostname -I | awk '{print $1}')
+
+if [[ "$MY_IP" == "$server_ip" ]]; then
