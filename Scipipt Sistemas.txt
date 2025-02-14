@@ -1,3 +1,10 @@
+##Comprobar si eres usuario root
+
+if [[ $EUID -ne 0 ]]; then
+   echo "Debes ser root para ejecutarlo y que salga bien" 
+   exit 1
+fi
+
 
 ##Datos de red de tu equipo
 
@@ -6,6 +13,7 @@ echo "Dirección IP: $(hostname -I | awk '{print $5}')"
 echo "Nombre del host: $(hostname)"
 echo "Interfaz de la red: $(ip route | grep default | awk '{print $5}')"
 echo ""
+
 
 ##instalación del servicio. Con comandos
 
@@ -16,7 +24,6 @@ apt update && apt install -y pulseaudio pavucontrol paprefs pulseaudio-utils tel
 
 SERVICIO="pulseaudio"
 VERSION=$(pulseaudio --versión 2>/dev/null/)
-
 
 if [ -n "$VERSION" ]; then
 echo "$SERVICIO esta activado con esta versión $VERSION"
