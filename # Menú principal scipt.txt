@@ -1,0 +1,17 @@
+# Menú principal
+menu() {
+    while true; do
+        clear
+        echo "GESTOR DE SERVICIO PULSEAUDIO"
+        echo "------------------------------"
+        echo "1. Instalar PulseAudio Tiene que seleccionar la IP del equipo en el Script"
+        echo "2. Eliminar PulseAudio"
+        echo "3. Iniciar PulseAudio"
+        echo "4. Detener PulseAudio"
+        echo "5. Consultar logs"
+        echo "   5.1 Por fecha"
+        echo "   5.2 Por tipo"
+        echo "6. Desactivar PipeWire"
+        echo "0. Salir"
+        echo "------------------------------"
+        read -p "Elige una opción:
