@@ -1,0 +1,28 @@
+echo ""
+            	echo "Instalando Pulseaudio en Docker"
+            	archivo_docker="Dockerfile"
+            	nombre_imagen="servicio_audio"
+            	nombre_contenedor="audio_service"
+            	if [ -f "$archivo_docker" ]; then
+                	echo "Eliminando Dockerfile existente"
+                	rm -f "$archivo_docker"
+            	fi
+            	echo "Creando Dockerfile"
+            	echo "from ubuntu:latest" > $archivo_docker
+            	echo "run apt-get update && apt-get install -y \\" >> $archivo_docker
+            	echo "pulseaudio pavucontrol paprefs pulseaudio-utils telnet ufw mpv \\" >> $archivo_docker
+            	echo "&& apt-get clean" >> $archivo_docker
+            	echo "copy ScriptAudio.sh /usr/local/bin/ScriptAudio.sh" >> $archivo_docker
+            	echo "run chmod +x /usr/local/bin/ScriptAudio.sh" >> $archivo_docker
+            	echo "cmd [\"bash\", \"/usr/local/bin/ScriptAudio.sh\"]" >> $archivo_docker
+            	echo "Dockerfile creado exitosamente"
+            	echo "Construyendo la imagen Docker"
+            	docker build -t $nombre_imagen .
+            	if [ "$(docker ps -aq -f name=$nombre_contenedor)" ]; then
+                	echo "Eliminando contenedor anterior"
+                	docker rm -f $nombre_contenedor
+            	fi
+            	echo "Iniciando el contenedor"
+            	docker run --name $nombre_contenedor -it --privileged --network=host $nombre_imagen
+            	echo "El contenedor con el servicio de audio esta corriendo"
+				;;
