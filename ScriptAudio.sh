@@ -221,29 +221,32 @@ menu() {
 		echo "Configuracion completada"
 		;;
 		4) echo""
-		echo -e "\e[38;5;75mEliminando Pulseaudio, Paprefs, Pulseaudio-utils, Pavucontrol ..\e[0m"
-		echo ""
-		sudo dpkg --configure -a
-                sudo apt install -f -y
-		sudo apt remove --purge -y pulseaudio pulseaudio-utils pavucontrol paprefs libpulse0 mpv libavdevice60 libavfilter9
-		sudo apt autoremove -y && sudo apt clean
-		sudo rm -rf /var/lib/dpkg/lock
-		sudo rm -rf /var/lib/dpkg/lock-frontend
-		sudo rm -rf /var/lib/apt/lists/*
-		sudo rm -rf /var/cache/apt/archives/*.deb
-		sudo apt update --fix-missing
-		sudo apt upgrade -y
-		echo ""
-		echo "Borrando la configuracion y archivos"
-		echo ""
-		sudo rm -rf ~/.config/pulse ~/.pulse /etc/pulse /var/lib/pulse
+		echo -e "\e[38;5;75mEliminando Pulseaudio, Paprefs, Pavucontrol-Utils, Pavcontrol...\e[0m"
 
-		ELIMINAR=$(dpkg -l | grep pulseaudio)
-		if [ -z "$ELIMINAR" ]; then
+	if ! command -v sudo &> /dev/null; then
+		echo "sudo no está instalado. Por favor, instálalo primero."
+		exit 1
+	fi
+
+	sudo apt-get --configure -a
+	sudo apt-get install -f -y
+	sudo apt-get remove --purge -y pulseaudio pulseaudio-utils pavucontrol paprefs libpulse0 mpv libavdevice58
+
+	sudo rm -rf /var/lib/dpkg/lock
+	sudo rm -rf /var/lib/dpkg/lock-frontend
+	sudo rm -rf /etc/apt/sources.list.d/
+	sudo rm -rf /var/lib/apt/lists/*
+	sudo apt-get autoclean
+
+	echo "Borrando la configuración y archivos"
+	rm -rf ~/.config/pulse /etc/pulse /var/lib/pulse
+
+	ELIMINAR=$(dpkg -l | grep pulseaudio)
+	if [ -z "$ELIMINAR" ]; then
 			echo "Se ha eliminado correctamente"
-		else 
-			echo "No se ha eliminado correctamente"
-		fi
+	else
+		echo "No se ha eliminado correctamente"
+	fi
 		;;
 		5)echo ""
 		if pgrep -x "pulseaudio" > /dev/null; then
