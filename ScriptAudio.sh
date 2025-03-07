@@ -1,51 +1,44 @@
+#!/bin/bash
+
 menu() {
-	if [[ $EUID -ne 0 ]]; then
-		echo "Debes ser root para poder ejecutarlo (pon sudo delante del comando de ejecucion del script)"
-		exit 1
+    if [[ $EUID -ne 0 ]]; then
+        echo "Debes ser root para ejecutarlo (usa sudo)."
+        exit 1
+    fi
+    while true; do
+        clear
+        echo "----------------------------------------------------------"
+        echo "| Servicio de Audio - Script realizado por Jorge del Horno |"
+        echo "----------------------------------------------------------"
+        echo "0. Información del equipo/red"
+        echo "1. Estado de Pulseaudio"
+        echo "2. Instalar Pulseaudio"
+        echo "3. Configurar Pulseaudio"
+        echo "4. Eliminar Pulseaudio"
+        echo "5. Iniciar Pulseaudio"
+        echo "6. Detener Pulseaudio"
+        echo "7. Desactivar PipeWire"
+        echo "8. Consultar Logs"
+        echo "9. Salir"
+        read -p "Elige una opción: " opcion
+        case $opcion in
+
+        0) echo -e "\nInformación del equipo:" 
+           echo "Dirección IP: $(hostname -I | awk '{print $1}')"
+           echo "Nombre del host: $(hostname)"
+           echo "Interfaz de red: $(ip route | grep default | awk '{print $5}')"
+           ;;
+
+        1) echo -e "\nEstado de Pulseaudio:"
+         PROCESS="pulseaudio"
+	if pgrep -x "$PROCESS" > /dev/null; then
+    echo "El proceso $PROCESS está en ejecución."
+	else
+    echo "El proceso $PROCESS no está en ejecución."
 	fi
-	while true; do
-		clear
-		echo "----------------------------------------------------------"
-		echo "| Servicio de Audio Script realizado por Jorge del Horno |"
-		echo "----------------------------------------------------------"
-		echo "-----------------------------------------------"
-		echo "| DEBES TENER PERMISOS DE SUDO PARA EJECUTARLO |"
-		echo "-----------------------------------------------"
-		echo "0. Conocer la informacion del equipo/red"
-		echo "1. Conocer el status de pulseaudio"
-		echo "2. Instalar Pulseaudio"
-		echo "3 Configurar Pulseaudio"
-		echo "4. Eliminar Pulseaudio"
-		echo "5. Iniciar Pulseaudio"
-		echo "6. Detener Pulseaudio"
-		echo "7. Desactivar PipeWire"
-		echo "8. Consultar Logs"
-		echo "9. Salir"
-		read -p "Elige una opcion: " opcion
-		case $opcion in
+	;;
 
-		0) echo ""
-		echo -e "\e[38;5;75mEsta es la informacion de red del pc:\e[0m"
-		echo "Direccion IP: $(hostname -I | awk '{print $1}')"
-		echo "Nombre del host: $(hostname)"
-		echo "Interfaz de red: $(ip route | grep default | awk '{print $5}')"
-		echo ""
-		;;
-
-		1) echo ""
-		echo -e "\e[38;5;75mEste es el status de pulseaudio actualmente..\e[0m"
-		SERVICIO="pulseaudio"
-		VERSION=$(pulseaudio --version 2>/dev/null)
-
-		if [ -n "$VERSION" ]; then
-			echo -e "\e[31m$SERVICIO esta activado con esta version: $VERSION\e[0m"
-		else
-			echo -e "\e[31m$SERVICIO no esta activado\e[0m"
-		fi
-		echo ""
-		;;
-
-		2) echo ""
+        2) echo ""
   		echo "Seleccione una opcion para instalar el servicio"
    		echo "1. Instalar con comandos"
   		echo "2. Instalar con Docker"
@@ -55,18 +48,10 @@ menu() {
   		case $instalar_opcion in
 
        		1) echo ""
-				SERVICIO="pulseaudio"
-                VERSION=$(pulseaudio --version 2>/dev/null)
+		echo "Instalando PulseAudio y herramientas"
+		apt update && apt install -y pulseaudio pulseaudio-utils pavucontrol
 
-                if [ -n "$VERSION" ]; then
-                        echo -e "\e[31m$SERVICIO esta activado con esta version: $VERSION\e[0m"
-                else
-                        echo -e "\e[38;5;75mInstalando Pulseaudio ..\e[0m"
-               		sudo apt update && sudo apt install -y pulseaudio pavucontrol paprefs pulseaudio-utils telnet ufw mpv
-                	echo ""
-               	 	echo "pulseaudio se ha intalado correctamente"
-                	echo ""
-                fi
+		echo "Instalación completada"
 				;;
 			
 			2) echo ""
@@ -135,52 +120,76 @@ menu() {
 
             ;;
 
-            3) echo "Instalando Pulseaudio con Ansible..."
-                  PLAYBOOK="install_audio.yml"
+            3) echo ""
 
-                  echo "---" > $PLAYBOOK
-                  echo "- name: Instalar Pulseaudio" >> $PLAYBOOK
-                  echo "  hosts: localhost" >> $PLAYBOOK
-                  echo "  become: true" >> $PLAYBOOK
-                  echo "  tasks:" >> $PLAYBOOK
-                  echo "    - name: Actualizar repositorios" >> $PLAYBOOK
-                  echo "      apt:" >> $PLAYBOOK
-                  echo "        update_cache: yes" >> $PLAYBOOK
-                  echo "    - name: Instalar Pulseaudio" >> $PLAYBOOK
-                  echo "      apt:" >> $PLAYBOOK
-                  echo "        name:" >> $PLAYBOOK
-                  echo "          - pulseaudio" >> $PLAYBOOK
-                  echo "          - pavucontrol" >> $PLAYBOOK
-                  echo "          - paprefs" >> $PLAYBOOK
-                  echo "          - pulseaudio-utils" >> $PLAYBOOK
-                  echo "          - telnet" >> $PLAYBOOK
-                  echo "          - ufw" >> $PLAYBOOK
-                  echo "          - mpv" >> $PLAYBOOK
-                  echo "        state: present" >> $PLAYBOOK
-                  echo "    - name: Abrir puerto 4713 en firewall" >> $PLAYBOOK
-                  echo "      ufw:" >> $PLAYBOOK
-                  echo "        rule: allow" >> $PLAYBOOK
-                  echo "        port: 4713" >> $PLAYBOOK
-                  echo "        proto: tcp" >> $PLAYBOOK
-                  echo "    - name: Configurar Pulseaudio" >> $PLAYBOOK
-                  echo "      lineinfile:" >> $PLAYBOOK
-                  echo "        path: /etc/pulse/default.pa" >> $PLAYBOOK
-                  echo "        line: \"load-module module-native-protocol-tcp auth-ip-acl=0.0.0.0\"" >> $PLAYBOOK
-                  echo "        insertafter: \"#load-module module-native-protocol-tcp\"" >> $PLAYBOOK
-                  echo "        state: present" >> $PLAYBOOK
-                  echo "    - name: Reiniciar Pulseaudio" >> $PLAYBOOK
-                  echo "      shell: pulseaudio --kill && pulseaudio --start" >> $PLAYBOOK
-                  echo "      ignore_errors: yes" >> $PLAYBOOK
+echo "Instalando Pulseaudio con Ansible..."
 
-                  echo "Ejecutando playbook..."
-                  ansible-playbook $PLAYBOOK
-                  echo "Instalacion con Ansible completada."
-                  ;;
+if ! command -v ansible-playbook &> /dev/null; then
+    echo "Ansible no está instalado. Instalando Ansible..."
+    sudo apt update
+    sudo apt install -y ansible
+    if ! command -v ansible-playbook &> /dev/null; then
+        echo "Error: No se pudo instalar Ansible. Por favor, instálalo manualmente."
+        exit 1
+    fi
+fi
+
+PLAYBOOK="install_audio.yml"
+
+cat <<EOF > $PLAYBOOK
+---
+- name: Instalar Pulseaudio
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Actualizar repositorios
+      apt:
+        update_cache: yes
+
+    - name: Instalar Pulseaudio y herramientas adicionales
+      apt:
+        name:
+          - pulseaudio
+          - pavucontrol
+          - paprefs
+          - pulseaudio-utils
+          - telnet
+          - ufw
+          - mpv
+        state: present
+
+    - name: Asegurar que el firewall permite conexiones en el puerto 4713
+      ufw:
+        rule: allow
+        port: 4713
+        proto: tcp
+
+    - name: Configurar Pulseaudio para permitir conexiones remotas
+      lineinfile:
+        path: /etc/pulse/default.pa
+        line: "load-module module-native-protocol-tcp auth-ip-acl=0.0.0.0"
+        insertafter: "^#.*load-module module-native-protocol-tcp"
+        state: present
+      notify: Reiniciar Pulseaudio
+
+  handlers:
+    - name: Reiniciar Pulseaudio
+      systemd:
+        name: pulseaudio
+        state: restarted
+EOF
+
+echo "Ejecutando playbook"
+ansible-playbook $PLAYBOOK
+
+echo "Instalación con Ansible completada"
+;;
            esac
            ;;
 
-		3) echo ""
-		IP_LOCAL=$(hostname -I | awk '{print $1}')
+
+        3) echo -e "\nConfigurando Pulseaudio..."
+           IP_LOCAL=$(hostname -I | awk '{print $1}')
 
 		echo "La IP del equipo es $IP_LOCAL"
 		read -p "¿Este es el equipo servidor o cliente? (s/c): " TIPO
@@ -220,66 +229,47 @@ menu() {
 
 		echo "Configuracion completada"
 		;;
-		4) echo""
-		echo -e "\e[38;5;75mEliminando Pulseaudio, Paprefs, Pavucontrol-Utils, Pavcontrol...\e[0m"
 
-	if ! command -v sudo &> /dev/null; then
-		echo "sudo no está instalado. Por favor, instálalo primero."
-		exit 1
-	fi
+        4) echo "Eliminando PulseAudio y herramientas..."
+	apt remove --purge -y pulseaudio pulseaudio-utils pavucontrol
+	apt autoremove -y
+	apt clean
 
-	sudo apt-get --configure -a
-	sudo apt-get install -f -y
-	sudo apt-get remove --purge -y pulseaudio pulseaudio-utils pavucontrol paprefs libpulse0 mpv libavdevice58
+	echo "Desinstalación completada"
+        ;;
 
-	sudo rm -rf /var/lib/dpkg/lock
-	sudo rm -rf /var/lib/dpkg/lock-frontend
-	sudo rm -rf /etc/apt/sources.list.d/
-	sudo rm -rf /var/lib/apt/lists/*
-	sudo apt-get autoclean
+        5) echo -e "\nIniciando Pulseaudio..."
+           export XDG_RUNTIME_DIR=/run/user/$(id -u)
+           pulseaudio --start
+           sleep 2
+           if pgrep -x "pulseaudio" > /dev/null; then
+               echo "Pulseaudio se ha iniciado correctamente."
+           else
+               echo "Error al iniciar Pulseaudio."
+           fi
+           ;;
 
-	echo "Borrando la configuración y archivos"
-	rm -rf ~/.config/pulse /etc/pulse /var/lib/pulse
+        6) echo -e "\nDeteniendo Pulseaudio..."
+           if pgrep -x "pulseaudio" > /dev/null; then
 
-	ELIMINAR=$(dpkg -l | grep pulseaudio)
-	if [ -z "$ELIMINAR" ]; then
-			echo "Se ha eliminado correctamente"
+    	pulseaudio --kill
+    	echo "Pulseaudio se ha detenido."
 	else
-		echo "No se ha eliminado correctamente"
+    	echo "Pulseaudio ya está detenido."
 	fi
-		;;
-		5)echo ""
-		if pgrep -x "pulseaudio" > /dev/null; then
-			echo -e "\e[38;5;75mPulseaudio ya esta en ejecucion\e[0m"
-		else
-			echo -e "\e[38;5;75mIniciando Pulseaudio ..\e[0m"
-		pulseaudio --start
-                echo "Pulseaudio se ha iniciado"
-		fi
-		;;
-		6)echo ""
-		if pgrep -x "pulseaudio" > /dev/null; then
-                	 echo -e "\e[38;5;75mDeteniendo Pulseaudio ..\e[0m"
-			pulseaudio --kill
-			echo "Pulseaudio se ha detenido"
-		else
-			echo -e "\e[38;5;75mPulseaudio ya esta detenido\e[0m"
-		fi
-		;;
-		7) echo ""
-		if systemctl is-enabled pipewire.service | grep -q "masked"; then
-			echo "Pipewire ya esta desactivado"
-                else
-			echo -e "\e[38;5;75mDesactivando pipewire ..\e[0m"
-			sudo systemctl stop pipewire.service
-			sudo systemctl stop pipewire.socket
-			sudo systemctl mask pipewire.service
-			sudo systemctl mask pipewire.socket
-			sudo systemctl disable pipewire.service
-			echo "Pipewire se ha desactivado"
-		fi
-		;;
-8) echo ""
+           ;;
+
+        7) echo "Desactivando PipeWire..."
+
+	if pgrep -x "pipewire" > /dev/null; then
+   	 pkill -x "pipewire"
+    	echo "PipeWire se ha detenido."
+	else
+  	  echo "PipeWire ya está detenido."
+	fi
+           ;;
+
+        8) echo ""
    echo "Seleccione una opcion a la hora de buscar los logs"
    echo "1. Logs generales del servicio de audio"
    echo "2. Logs por fechas del servicio de audio"
@@ -343,4 +333,3 @@ menu() {
 }
 
 menu
-
